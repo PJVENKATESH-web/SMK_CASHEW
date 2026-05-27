@@ -34,18 +34,34 @@ function AdminOrders() {
   };
 
   useEffect(() => {
-    if (isAuthenticated && !user) {
-      setStatus('loading');
+    if (!isAuthenticated || !user || user.role !== 'admin') {
       return;
     }
 
-    if (isAuthenticated && user?.role === 'admin') {
-      fetchOrders();
-      return;
-    }
+    let isMounted = true;
 
-    setStatus('success');
-  }, [isAuthenticated, user?.role]);
+    const loadOrders = async () => {
+      try {
+        const response = await api.get('/admin/orders');
+
+        if (!isMounted) return;
+
+        setOrders(response.data.orders || []);
+        setStatus('success');
+      } catch (err) {
+        if (!isMounted) return;
+
+        setError(err.response?.data?.message || 'Failed to load orders');
+        setStatus('error');
+      }
+    };
+
+    loadOrders();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthenticated, user]);
 
   const handleStatusChange = async (orderId, orderStatus) => {
     try {

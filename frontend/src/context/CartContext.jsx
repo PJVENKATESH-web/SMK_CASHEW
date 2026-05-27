@@ -1,5 +1,7 @@
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -17,9 +19,10 @@ export function CartProvider({ children }) {
   const [items, setItems] = useState([]);
   const [status, setStatus] = useState('idle');
 
-  const fetchCart = async () => {
+  const fetchCart = useCallback(async () => {
     if (!isAuthenticated) {
       setItems([]);
+      setStatus('idle');
       return;
     }
 
@@ -31,13 +34,47 @@ export function CartProvider({ children }) {
     } catch {
       setStatus('error');
     }
-  };
-
-  useEffect(() => {
-    fetchCart();
   }, [isAuthenticated]);
 
-  const addToCart = async (productId, quantity = 1) => {
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!isAuthenticated) {
+      queueMicrotask(() => {
+        if (!isMounted) return;
+
+        setItems([]);
+        setStatus('idle');
+      });
+
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    const loadCart = async () => {
+      try {
+        const response = await api.get('/cart');
+
+        if (!isMounted) return;
+
+        setItems(response.data.items || []);
+        setStatus('success');
+      } catch {
+        if (!isMounted) return;
+
+        setStatus('error');
+      }
+    };
+
+    loadCart();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isAuthenticated]);
+
+  const addToCart = useCallback(async (productId, quantity = 1) => {
     const response = await api.post('/cart', {
       productId,
       quantity,
@@ -46,9 +83,9 @@ export function CartProvider({ children }) {
     setItems(response.data.items || []);
 
     return response.data;
-  };
+  }, []);
 
-  const updateCartItem = async (productId, quantity) => {
+  const updateCartItem = useCallback(async (productId, quantity) => {
     const response = await api.put(`/cart/${productId}`, {
       quantity,
     });
@@ -56,15 +93,15 @@ export function CartProvider({ children }) {
     setItems(response.data.items || []);
 
     return response.data;
-  };
+  }, []);
 
-  const removeCartItem = async (productId) => {
+  const removeCartItem = useCallback(async (productId) => {
     const response = await api.delete(`/cart/${productId}`);
 
     setItems(response.data.items || []);
 
     return response.data;
-  };
+  }, []);
 
   const totalItems = items.reduce(
     (sum, item) => sum + item.quantity,
@@ -87,7 +124,16 @@ export function CartProvider({ children }) {
       updateCartItem,
       removeCartItem,
     }),
-    [items, status, totalItems, subtotal]
+    [
+      items,
+      status,
+      totalItems,
+      subtotal,
+      fetchCart,
+      addToCart,
+      updateCartItem,
+      removeCartItem,
+    ]
   );
 
   return (

@@ -26,9 +26,33 @@ function AdminProducts() {
   };
 
   useEffect(() => {
-    if (isAuthenticated && user?.role === 'admin') {
-      fetchProducts();
+    if (!isAuthenticated || !user || user.role !== 'admin') {
+      return;
     }
+
+    let isMounted = true;
+
+    const loadProducts = async () => {
+      try {
+        const response = await api.get('/products?limit=100');
+
+        if (!isMounted) return;
+
+        setProducts(response.data.products || []);
+        setStatus('success');
+      } catch (err) {
+        if (!isMounted) return;
+
+        setError(err.response?.data?.message || 'Failed to load products');
+        setStatus('error');
+      }
+    };
+
+    loadProducts();
+
+    return () => {
+      isMounted = false;
+    };
   }, [isAuthenticated, user]);
 
   const handleDelete = async (productId) => {
@@ -114,7 +138,7 @@ function AdminProducts() {
                   </td>
 
                   <td className="px-4 py-3 text-stone-600">
-                    ₹{product.price}
+                    Rs. {product.price}
                   </td>
 
                   <td className="px-4 py-3 text-stone-600">
