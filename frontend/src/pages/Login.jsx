@@ -9,7 +9,7 @@ function Login(){
     const {login}=useAuth();
 
     const [form,setForm]=useState({
-        email:'',
+        identifier:'',
         password:'',
     });
     const [status,setStatus]=useState('idle');
@@ -47,8 +47,8 @@ function Login(){
 
             <form onSubmit={handleSubmit} className='mt-6 space-y-4'>
                 <div>
-                    <label className='block text-sm font-medium text-stone-700'>Email</label>
-                    <input type='email' name='email' value={form.email} onChange={handleChange} required 
+                    <label className='block text-sm font-medium text-stone-700'>Email or phone number</label>
+                    <input type='text' name='identifier' inputMode='email' autoComplete='username' value={form.identifier} onChange={handleChange} required 
                     className='mt-1 w-full rounded-md border border-status-300 px-3 py-2 outline-none focus:border-amber-700'/>
                 </div>
                 <div>

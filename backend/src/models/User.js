@@ -12,7 +12,14 @@ const userSchema=new mongoose.Schema(
             required: true,
             unique: true,
             lowercase: true,
-            trime: true,
+            trim: true,
+        },
+        phone: {
+            type: String,
+            required: true,
+            unique: true,
+            trim: true,
+            match: [/^[6-9]\d{9}$/, 'Enter a valid 10 digit Indian mobile number'],
         },
         passwordHash:{
             type: String,

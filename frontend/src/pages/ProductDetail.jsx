@@ -85,7 +85,7 @@ function ProductDetail() {
       </Link>
 
       <div className="grid gap-8 lg:grid-cols-2">
-        <div className="flex aspect-[4/3] items-center justify-center rounded-lg bg-stone-100">
+        <div className="flex aspect-4/3 items-center justify-center rounded-lg bg-stone-100">
           {product.images?.[0] ? (
             <img
               src={product.images[0]}

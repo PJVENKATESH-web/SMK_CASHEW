@@ -10,6 +10,7 @@ function Register() {
   const [form, setForm] = useState({
     name: "",
     email: "",
+    phone: "",
     password: "",
   });
 
@@ -81,6 +82,12 @@ function Register() {
           />
         </div>
 
+        <div>
+          <label className="block text-sm font-medium text-stone-700">
+            Mobile number
+          </label>
+          <input type="tel" name="phone" value={form.phone} onChange={handleChange} required pattern="[6-9][0-9]{9}" inputMode="numeric" placeholder="10 digit mobile number" className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 outline-none focus:border-amber-700" />
+        </div>
         <div>
           <label className="block text-sm font-medium text-stone-700">
             Password

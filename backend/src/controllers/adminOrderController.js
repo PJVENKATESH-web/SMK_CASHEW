@@ -1,4 +1,5 @@
 const Order = require('../models/Order');
+const User = require('../models/User');
 
 const getAllOrders = async (req, res) => {
   try {
@@ -65,7 +66,28 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
+
+const getUsers = async (req, res) => {
+  try {
+    const users = await User.find({}, 'name email phone role createdAt').sort({ createdAt: -1 });
+    const totals = await Order.aggregate([
+      { $group: { _id: '$user', orders: { $sum: 1 }, spent: { $sum: '$totalAmount' } } },
+    ]);
+    const summary = new Map(totals.map((item) => [String(item._id), item]));
+    res.json({
+      users: users.map((user) => ({
+        ...user.toObject(),
+        orders: summary.get(String(user._id))?.orders || 0,
+        spent: summary.get(String(user._id))?.spent || 0,
+      })),
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch customers' });
+  }
+};
+
 module.exports = {
   getAllOrders,
   updateOrderStatus,
+  getUsers,
 };

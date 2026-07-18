@@ -12,17 +12,17 @@ const createToken=(userId)=>{
 
 const register=async(req,res)=>{
     try{
-        const {name,email,password}=req.body;
-        const existingUser=await User.findOne({email});
+        const {name,email,phone,password}=req.body;
+        const existingUser=await User.findOne({ $or: [{email}, {phone}] });
         if(existingUser){
             return res.status(409).json({
-                message: 'Email is already registered',
+                message: 'This email or phone number is already registered',
             });
         }
 
         const passwordHash=await bcrypt.hash(password,10);
         const user=await User.create({
-            name,email,passwordHash,
+            name,email,phone,passwordHash,
         });
 
         const token=createToken(user._id);
@@ -33,6 +33,7 @@ const register=async(req,res)=>{
                 id: user._id,
                 name: user.name,
                 email: user.email,
+                phone: user.phone,
                 role: user.role,
             }
         });
@@ -47,9 +48,9 @@ const register=async(req,res)=>{
 
 const login=async(req,res)=>{
     try{
-        const {email,password}=req.body;
-
-        const user=await User.findOne({email});
+        const {identifier,password}=req.body;
+        const normalizedPhone=String(identifier || '').replace(/\D/g, '').slice(-10);
+        const user=await User.findOne({ $or: [{email: String(identifier || '').toLowerCase()}, {phone: normalizedPhone}] });
         if(!user){
             return res.status(401).json({
                 message: 'Invalid email or password',
@@ -73,6 +74,7 @@ const login=async(req,res)=>{
                 id: user._id,
                 name: user.name,
                 email: user.email,
+                phone: user.phone,
                 role: user.role,
             }
         });
@@ -92,6 +94,7 @@ const getMe=async(req,res)=>{
             id: req.user._id,
             name: req.user.name,
             email:req.user.email,
+            phone:req.user.phone,
             role: req.user.role,
         }
     })
